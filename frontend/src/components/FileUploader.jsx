@@ -21,28 +21,31 @@ export const FileUploader = () => {
 
   console.log("filessssssssss", files);
 
-  //   const handleUpload = async () => {
-  //     if (!files.length) return;
-  //     setUploading(true);
-  //     setMessage("");
+    const handleUpload = async () => {
+      if (!files.length) return;
+      setUploading(true);
+      setMessage("");
 
-  //     const formData = new FormData();
-  //     files.forEach((file) => formData.append("files", file));
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
 
-  //     try {
-  //       const res = await axios.post("http://localhost:5000/upload", formData, {
-  //         headers: {
-  //           "Content-Type": "multipart/form-data",
-  //         },
-  //       });
-  //       setMessage(`Uploaded ${res.data.uploaded.length} files successfully!`);
-  //     } catch (err) {
-  //       console.error(err);
-  //       setMessage("Upload failed");
-  //     }
+      
+      try {
+        console.log("formData", formData);
+        const res = await axios.post("http://localhost:5000/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        setMessage(`Uploaded ${res.data.uploaded.length} files successfully!`);
+        setFiles([])
+      } catch (err) {
+        console.error(err);
+        setMessage("Upload failed");
+      }
 
-  //     setUploading(false);
-  //   };
+      setUploading(false);
+    };
 
   return (
     <div className="max-w-xl mx-auto mt-20 p-6 border rounded-xl bg-white shadow">
@@ -74,7 +77,7 @@ export const FileUploader = () => {
       )}
 
       <button
-        // onClick={handleUpload}
+        onClick={handleUpload}
         disabled={uploading || files.length === 0}
         className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
