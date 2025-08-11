@@ -37,7 +37,7 @@ export const FileUploader = () => {
             "Content-Type": "multipart/form-data",
           },
         });
-        setMessage(`Uploaded ${res.data.uploaded.length} files successfully!`);
+        setMessage(`Uploaded files successfully!`,res);
         setFiles([])
       } catch (err) {
         console.error(err);

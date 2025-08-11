@@ -1,39 +1,51 @@
 const { uploadToMinio } = require("../minio/minio");
+const Asset = require("../models/Asset");
+const { assetQueue } = require("../queues/assetQueue");
 
 const Upload = async (req, res) => {
   const files = req.files;
-console.log("Files received:", files);
+
   if (!files || files.length === 0) {
     return res.status(400).json({ error: "No files provided" });
   }
 
- try {
-   const uploaded = await Promise.all(
-     files.map(async (file) => {
-       const filename = `${Date.now()}-${file.originalname}`;
-    //    const storagePath = `assets/${filename}`;
+  const uploadedFiles = [];
 
-       await uploadToMinio(file.buffer, filename, file.mimetype);
+  try {
+    await Promise.all(
+      files.map(async (file) => {
+       
+         const minioKey = `original/${Date.now()}-${file.originalname}`;
+         const minioUrl = await uploadToMinio(
+           file.buffer,
+           minioKey,
+           file.mimetype
+         );
 
-       // Save metadata to MongoDB
-    //    const asset = new Asset({
-    //      filename,
-    //      originalName: file.originalname,
-    //      size: file.size,
-    //      mimeType: file.mimetype,
-    //      storagePath,
-    //    });
-    //    await asset.save();
+        // Save metadata to MongoDB
+        const newAsset = await Asset.create({
+          filename: file.originalname,
+          status: "processing",
+          createdAt: new Date(),
+          originalFileUrl: minioUrl,
+        });
 
-       return { filename };
-     })
-   );
+        uploadedFiles.push(newAsset);
 
-   res.json({ uploaded });
- } catch (err) {
-   console.error("Upload failed:", err);
-   res.status(500).json({ error: "Upload failed" });
- }
+        // Add job to queue for background processing
+        await assetQueue.add("process", {
+          minioKey,
+          originalName: file.originalname,
+          assetId: newAsset._id.toString(),
+        });
+      })
+    );
+
+    res.json({ message: "Files uploaded successfully", files: uploadedFiles });
+  } catch (err) {
+    console.error("Upload failed:", err);
+    res.status(500).json({ error: "Upload failed" });
+  }
 };
 
 module.exports = Upload;
