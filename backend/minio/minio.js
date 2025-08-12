@@ -17,8 +17,6 @@ async function uploadToMinio(fileInput, filename, mimetype) {
   const exists = await minioClient.bucketExists(BUCKET);
   if (!exists) await minioClient.makeBucket(BUCKET);
 
-  console.log(`Uploading ${fileInput} to MinIO as ${filename}`);
-
   if (Buffer.isBuffer(fileInput)) {
     // Buffer upload
     await minioClient.putObject(BUCKET, filename, fileInput, {
@@ -50,4 +48,4 @@ async function downloadFromMinio(minioKey, localPath) {
   });
 }
 
-module.exports = { uploadToMinio, downloadFromMinio };
+module.exports = { uploadToMinio, downloadFromMinio, minioClient };
