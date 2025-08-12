@@ -9,8 +9,6 @@ export default function Gallery() {
     const fetchFiles = async () => {
       try {
         const res = await axios.get("http://localhost:5000/files");
-        console.log("ressssssssss",res?.data);
-        
         setFiles(res?.data || []);
       } catch (error) {
         console.error("Error fetching files:", error);
@@ -62,13 +60,24 @@ export default function Gallery() {
                 <p className="text-sm font-medium text-gray-800 truncate">
                   {file.name}
                 </p>
-                <a
-                  href={file.url}
-                  download
-                  className="mt-2 inline-block w-full text-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
-                >
-                  Download
-                </a>
+                <div className="p-4 flex gap-2">
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition"
+                  >
+                    Open
+                  </a>
+                  <a
+                    href={file.downloadUrl}
+                    target="_blank"
+                    download
+                    className="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
+                  >
+                    Download
+                  </a>
+                </div>
               </div>
             </div>
           ))

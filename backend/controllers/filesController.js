@@ -20,17 +20,27 @@ const FilesController = async (req, res) => {
 
     stream.on("end", async () => {
       const files = await Promise.all(
-        objects.map(async (obj) => ({
-          name: obj.name,
-          size: obj.size,
-          lastModified: obj.lastModified,
-          type: obj.name.split(".").pop().toLowerCase(),
-          url: await minioClient.presignedGetObject(
-            process.env.MINIO_BUCKET,
-            obj.name,
-            24 * 60 * 60
-          ),
-        }))
+        objects.map(async (obj) => {
+          const parts = obj.name.split("/");
+          const folder = parts.length > 1 ? parts[0] : null;
+          const filename =
+            parts.length > 1 ? parts.slice(1).join("/") : parts[0];
+          return {
+            name: filename,
+            folder: folder,
+            size: obj.size,
+            lastModified: obj.lastModified,
+            type: obj.name.split(".").pop().toLowerCase(),
+            url: await minioClient.presignedGetObject(
+              process.env.MINIO_BUCKET,
+              obj.name,
+              24 * 60 * 60
+            ),
+            downloadUrl: `http://localhost:5000/download/${folder}/${encodeURIComponent(
+              filename
+            )}`,
+          };
+        })
       );
       res.json(files);
     });
