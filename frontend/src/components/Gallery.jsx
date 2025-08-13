@@ -4,18 +4,26 @@ import { useEffect, useState } from "react";
 export default function Gallery() {
   const [files, setFiles] = useState([]);
   const [search, setSearch] = useState("");
+  const [fileType, setFileType] = useState("");
+  const [uploadedRange, setUploadedRange] = useState(""); 
+
+  const fetchFiles = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/files", {
+        params: {
+          type: fileType || undefined,
+          uploaded: uploadedRange || undefined,
+        },
+      });
+      setFiles(res?.data || []);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/files");
-        setFiles(res?.data || []);
-      } catch (error) {
-        console.error("Error fetching files:", error);
-      }
-    };
     fetchFiles();
-  }, []);
+  }, [fileType, uploadedRange]);
 
   const filtered = files.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
@@ -23,14 +31,48 @@ export default function Gallery() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-center mb-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center mb-6">
         <input
           type="text"
           placeholder="Search files..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full sm:max-w-md p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+
+        <select
+          value={fileType}
+          onChange={(e) => setFileType(e.target.value)}
+          className="w-full sm:w-48 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">All Types</option>
+          <option value="image">Images</option>
+          <option value="video">Videos</option>
+          <option value="other">Others</option>
+        </select>
+
+        <select
+          value={uploadedRange}
+          onChange={(e) => setUploadedRange(e.target.value)}
+          className="w-full sm:w-48 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Uploaded</option>
+          <option value="today">Today</option>
+          <option value="7days">Last 7 Days</option>
+          <option value="30days">Last 30 Days</option>
+        </select>
+
+        <button
+          onClick={() => {
+            setFileType("");
+            setUploadedRange("");
+            setSearch("");
+            fetchFiles();
+          }}
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
+        >
+          Reset
+        </button>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -40,13 +82,13 @@ export default function Gallery() {
               key={file.name}
               className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow bg-white"
             >
-              {file.type.match(/jpg|png|gif|jpeg/) ? (
+              {file.type === "image" ? (
                 <img
                   src={file.url}
                   alt={file.name}
                   className="w-full h-48 object-cover"
                 />
-              ) : file.type.match(/mp4|webm|ogg/) ? (
+              ) : file.type === "video" ? (
                 <video controls className="w-full h-48 object-cover bg-black">
                   <source src={file.url} type={`video/${file.type}`} />
                 </video>
