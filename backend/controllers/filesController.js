@@ -17,7 +17,7 @@ const FilesController = async (req, res) => {
 
     const stream = minioClient.listObjectsV2(
       process.env.MINIO_BUCKET,
-      "",
+      "original/",
       true
     );
 

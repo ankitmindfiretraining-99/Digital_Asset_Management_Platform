@@ -10,7 +10,6 @@ const ffprobePath = require("ffprobe-static").path;
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-const Asset = require("../models/Asset");
 const { uploadToMinio, downloadFromMinio } = require("../minio/minio");
 
 const TMP_DIR = os.tmpdir();
@@ -76,7 +75,7 @@ async function generateThumbnail(inputPath, outputPath) {
 const worker = new Worker(
   "asset-processing",
   async (job) => {
-    const { minioKey, originalName, assetId } = job.data;
+    const { minioKey, originalName } = job.data;
     const fileExt = path.extname(originalName).toLowerCase();
 
     // Download from MinIO
@@ -115,7 +114,7 @@ const worker = new Worker(
         resolutions.push(res);
         fs.unlinkSync(outputFile);
       }
-    } else if ([".jpg", ".jpeg", ".png", ".webp"].includes(fileExt)) {
+    } else if ([".jpg", ".jpeg", ".png", ".webp","svg"].includes(fileExt)) {
       // Image Processing
       fileType = "image";
 
@@ -134,29 +133,7 @@ const worker = new Worker(
       );
       fs.unlinkSync(thumbPath);
 
-      // Upload original image
-      const minioUrl = await uploadToMinio(
-        localFilePath,
-        `images/${originalName}`,
-        fileExt === ".png" ? "image/png" : "image/jpeg"
-      );
-      minioUrls.push(minioUrl);
     }
-
-    // Save or update metadata in MongoDB
-    await Asset.findOneAndUpdate(
-      { _id: assetId },
-      {
-        $set: {
-          fileType,
-          resolutions,
-          thumbnailUrl,
-          metadata,
-          minioUrls,
-        },
-      },
-      { upsert: true, new: true }
-    );
 
     // Remove local temp file
     fs.unlinkSync(localFilePath);

@@ -14,20 +14,16 @@ const Upload = async (req, res) => {
   try {
     await Promise.all(
       files.map(async (file) => {
-       
-         const minioKey = `original/${Date.now()}-${file.originalname}`;
-         const minioUrl = await uploadToMinio(
-           file.buffer,
-           minioKey,
-           file.mimetype
-         );
+
+        const minioKey = `original/${Date.now()}-${file.originalname}`;
+        
+        await uploadToMinio(file.buffer, minioKey, file.mimetype);
 
         // Save metadata to MongoDB
         const newAsset = await Asset.create({
           filename: file.originalname,
-          status: "processing",
-          createdAt: new Date(),
-          originalFileUrl: minioUrl,
+          fileType: file.mimetype,
+          downloadCount: 0,
         });
 
         uploadedFiles.push(newAsset);
@@ -36,7 +32,7 @@ const Upload = async (req, res) => {
         await assetQueue.add("process", {
           minioKey,
           originalName: file.originalname,
-          assetId: newAsset._id.toString(),
+          // assetId: newAsset._id.toString(),
         });
       })
     );
