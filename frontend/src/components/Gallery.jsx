@@ -5,7 +5,7 @@ export default function Gallery() {
   const [files, setFiles] = useState([]);
   const [search, setSearch] = useState("");
   const [fileType, setFileType] = useState("");
-  const [uploadedRange, setUploadedRange] = useState(""); 
+  const [uploadedRange, setUploadedRange] = useState("");
 
   const fetchFiles = async () => {
     try {
@@ -29,8 +29,37 @@ export default function Gallery() {
     f.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleDownload = async (url) => {
+    try {
+      window.open(url, "_blank");
+      setTimeout(() => fetchFiles(), 1000);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-blue-50 p-6 rounded-xl shadow-md flex items-center justify-center">
+          <div className="text-center">
+            <p className="mt-2 text-2xl font-bold text-blue-700">
+              {files.length > 0 ? files[0].totalUploads : 0}
+            </p>
+            <p className="text-sm text-gray-500">Total Uploads</p>
+          </div>
+        </div>
+        <div className="bg-green-50 p-6 rounded-xl shadow-md flex items-center justify-center">
+          <div className="text-center">
+            <p className="mt-2 text-2xl font-bold text-green-700">
+              {files.reduce((sum, file) => sum + (file.downloadCount || 0), 0)}
+            </p>
+            <p className="text-sm text-gray-500">Total Downloads</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row flex-wrap gap-4 justify-center mb-6">
         <input
           type="text"
@@ -80,7 +109,7 @@ export default function Gallery() {
           filtered.map((file) => (
             <div
               key={file.name}
-              className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow bg-white"
+              className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow bg-white flex flex-col"
             >
               {file.type === "image" ? (
                 <img
@@ -93,32 +122,37 @@ export default function Gallery() {
                   <source src={file.url} type={`video/${file.type}`} />
                 </video>
               ) : (
-                <div className="h-48 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
+                <div className="h-48 flex items-center justify-center bg-gray-100 text-gray-500 text-sm p-2 text-center">
                   {file.name}
                 </div>
               )}
 
-              <div className="p-4">
+              <div className="p-4 flex flex-col flex-1">
                 <p className="text-sm font-medium text-gray-800 truncate">
                   {file.name}
                 </p>
-                <div className="p-4 flex gap-2">
+                <p className="text-xs text-gray-500 mt-1">
+                  Downloads:{" "}
+                  <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">
+                    {file.downloadCount}
+                  </span>
+                </p>
+
+                <div className="mt-auto flex gap-2 pt-4">
                   <a
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition"
+                    className="flex-1 text-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition text-sm"
                   >
                     Open
                   </a>
-                  <a
-                    href={file.downloadUrl}
-                    target="_blank"
-                    download
-                    className="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition"
+                  <button
+                    onClick={() => handleDownload(file.downloadUrl)}
+                    className="flex-1 text-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition text-sm"
                   >
                     Download
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
