@@ -5,7 +5,6 @@ const dotenv = require("dotenv");
 const uploadFileRoute = require("./routes/uploadFileRoute");
 const filesRoute = require("./routes/filesRoute")
 const downloadRoute = require("./routes/downloadRoute")
-const filesStatsRoute = require("./routes/filesStatsRoute");
 
 const PORT = process.env.PORT;
 const app = express();
@@ -15,7 +14,6 @@ app.use(express.json());
 app.use("/upload", uploadFileRoute);
 app.use("/files", filesRoute);
 app.use("/download", downloadRoute);
-app.use("/files", filesStatsRoute);
 
 dotenv.config();
 
